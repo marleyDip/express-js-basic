@@ -69,6 +69,11 @@ app.get("/", (req, res) => {
   res.render("index", { userName });
 });
 
+// Fetch folder
+
+app.use("/public", express.static("public"));
+app.use("/images", express.static("images"));
+
 app.listen(PORT, () => {
   console.log(`server is running on http://localhost:${PORT}`);
 });
