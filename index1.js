@@ -74,6 +74,28 @@ app.get("/", (req, res) => {
 app.use("/public", express.static("public"));
 app.use("/images", express.static("images"));
 
+// fetch form data
+
+import multer from "multer";
+import { storage } from "./config/multer.js";
+
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 1024000,
+  },
+});
+
+app.use(express.urlencoded({ extended: true }));
+app.use(upload.single("image"));
+app.use(upload.array("image", 2));
+
+app.post("/form", (req, res) => {
+  console.log(req.body);
+  console.log(req.file);
+  res.send("Form Received");
+});
+
 app.listen(PORT, () => {
   console.log(`server is running on http://localhost:${PORT}`);
 });
