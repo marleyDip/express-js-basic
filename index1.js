@@ -61,6 +61,14 @@ app.use((err, req, res, next) => {
   res.send("internal  server error");
 });
 
+// set ejs as the view engine
+app.set("view engine", "ejs"); // use EJS as the templating engine
+
+app.get("/", (req, res) => {
+  const userName = "Dip Akand";
+  res.render("index", { userName });
+});
+
 app.listen(PORT, () => {
   console.log(`server is running on http://localhost:${PORT}`);
 });

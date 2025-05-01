@@ -3,13 +3,13 @@ const app = express();
 
 const PORT = 3000;
 
-// set ejs as the view engine
-app.set("view engine", "ejs"); // use EJS as the templating engine
+app.use("/public", express.static("public"));
+app.use("/images", express.static("images"));
 
 app.get("/", (req, res) => {
-  const userName = "Dip Akand";
-  res.render("index", { userName });
+  res.send("hello, express");
 });
+
 app.listen(PORT, () => {
   console.log(`server is running on http://localhost:${PORT}`);
 });
