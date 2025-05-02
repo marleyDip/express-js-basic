@@ -61,6 +61,7 @@ app.use((err, req, res, next) => {
   res.send("internal  server error");
 });
 
+// Embedded JavaScript Templates
 // set ejs as the view engine
 app.set("view engine", "ejs"); // use EJS as the templating engine
 
@@ -89,6 +90,7 @@ const upload = multer({
 });
 
 app.use(express.urlencoded({ extended: true }));
+
 app.use(upload.single("image"));
 app.use(upload.array("image", 2));
 
@@ -96,6 +98,79 @@ app.post("/form", (req, res) => {
   console.log(req.body);
   console.log(req.file);
   res.send("Form Received");
+});
+
+/* MongoDB & mongoose */
+
+import { connectDB } from "./config/db.js";
+import { Person } from "./models/Person.js";
+
+app.use(express.json());
+await connectDB();
+
+// Saving Data in MongoDB
+
+// This handles HTTP POST requests sent to /person.
+app.post("/person", async (req, res) => {
+  /// console.log(req.body);
+
+  // Assumes the client sends a JSON body like:
+
+  /* Person is a Mongoose model.
+  
+  This creates a new object based on your schema but doesn't save it yet. */
+
+  // '.save' --> Saves the document to the MongoDB collection (e.g., people).
+  // await ensures this runs before continuing.
+
+  try {
+    const { name, age, email } = req.body;
+    const newPerson = new Person({
+      name,
+      age,
+      email,
+    });
+    await newPerson.save();
+    console.log(newPerson);
+    res.send("Person Added");
+  } catch (error) {
+    res.send(error.message);
+  } /* catch (err) {
+    if (err.code === 11000) {
+      res.status(400).send("Email must be Unique");
+    } else {
+      res.status(500).send("Server Error");
+    }
+  } */
+});
+
+// Updating Data in MongoDB
+app.put("/person", async (req, res) => {
+  const { id } = req.body;
+  const personData = await Person.findByIdAndUpdate(id, { age: 28 });
+
+  /// const { name, age } = req.body;
+
+  // for find multiple data that match
+  // const personData = await Person.find({ name, age });
+
+  // for find single data that match 1st
+  // const personData = await Person.findOne({ name, age });
+
+  /// const personData = await Person.findById(id);
+  /// personData.age = 30;
+  /// await personData.save();
+
+  console.log(personData);
+  res.send("Person Found");
+});
+
+// deleting data from MongoDB
+
+app.delete("/person/:id", async (req, res) => {
+  const { id } = req.params;
+  await Person.findByIdAndDelete(id);
+  res.send("User Deleted Successfully");
 });
 
 // Saving Data in MongoDB
@@ -111,20 +186,6 @@ app.post("/person", async (req, res) => {
   await newPerson.save();
   console.log(newPerson);
   res.send("Person Added");
-});
-
-// Updating Data in MongoDB
-app.put("/person", async (req, res) => {
-  /// const { name, age } = req.body;
-
-  // for find multiple data that match
-  // const personData = await Person.find({ name, age });
-
-  // for find single data that match 1st
-  // const personData = await Person.findOne({ name, age });
-
-  console.log(personData);
-  res.send("Person Found");
 });
 
 app.listen(PORT, () => {
