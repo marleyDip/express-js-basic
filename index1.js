@@ -78,6 +78,8 @@ app.use("/images", express.static("images"));
 
 import multer from "multer";
 import { storage } from "./config/multer.js";
+import { app } from "./index.js";
+import { Person } from "./models/Person.js";
 
 const upload = multer({
   storage,
@@ -94,6 +96,35 @@ app.post("/form", (req, res) => {
   console.log(req.body);
   console.log(req.file);
   res.send("Form Received");
+});
+
+// Saving Data in MongoDB
+app.post("/person", async (req, res) => {
+  /// console.log(req.body);
+  const { name, age, email } = req.body;
+
+  const newPerson = new Person({
+    name,
+    age,
+    email,
+  });
+  await newPerson.save();
+  console.log(newPerson);
+  res.send("Person Added");
+});
+
+// Updating Data in MongoDB
+app.put("/person", async (req, res) => {
+  /// const { name, age } = req.body;
+
+  // for find multiple data that match
+  // const personData = await Person.find({ name, age });
+
+  // for find single data that match 1st
+  // const personData = await Person.findOne({ name, age });
+
+  console.log(personData);
+  res.send("Person Found");
 });
 
 app.listen(PORT, () => {
