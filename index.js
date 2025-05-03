@@ -4,6 +4,8 @@ import session from "express-session";
 
 export const app = express();
 const PORT = 3000;
+
+app.use(express.json());
 app.use(cookieParser());
 app.use(
   session({
@@ -17,20 +19,33 @@ app.get("/", (req, res) => {
   res.send("hello, express");
 });
 
-app.get("/visit", (req, res) => {
-  if (req.session.visitCount) {
-    req.session.visitCount++;
+// Sample user data for demonstration
+const users = [];
 
-    res.send(`You have visited this page ${req.session.visitCount} times`);
-  } else {
-    req.session.visitCount = 1;
-    res.send("This is your first visit to this page");
-  }
+app.post("/register", async (req, res) => {
+  const { username, password } = req.body;
+  users.push({ username, password });
+  res.send("User Registered Successfully");
 });
 
-app.get("/remove-visit", (req, res) => {
-  req.session.destroy();
-  res.send("Session destroyed. Visit count removed.");
+app.post("/login", async (req, res) => {
+  const { username, password } = req.body;
+  const user = users.find((u) => u.username === username);
+  /* !user: This checks if the user object was not found (e.g., from a database query).
+
+    password !== user.password: This checks if the provided password does not match the stored password. */
+  if (!user || password !== user.password) {
+    return res.send("Invalid credentials");
+  }
+  req.session.user = user;
+  res.send("User Logged In Successfully");
+});
+
+app.get("/dashboard", (req, res) => {
+  if (!req.session.user) {
+    return res.send("Unauthorized access");
+  }
+  res.send(`Welcome to your dashboard, ${req.session.user.username}`);
 });
 
 app.listen(PORT, () => {
