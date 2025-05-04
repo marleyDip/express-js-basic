@@ -1,51 +1,49 @@
 import express from "express";
-import cookieParser from "cookie-parser";
-import session from "express-session";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 export const app = express();
 const PORT = 3000;
 
 app.use(express.json());
-app.use(cookieParser());
-app.use(
-  session({
-    secret: "sample_secret",
-    resave: false,
-    saveUninitialized: false,
-  })
-);
 
 app.get("/", (req, res) => {
   res.send("hello, express");
 });
 
-// Sample user data for demonstration
 const users = [];
 
+// jwt secret key
 app.post("/register", async (req, res) => {
   const { username, password } = req.body;
-  users.push({ username, password });
+  const hashedPassword = await bcrypt.hash(password, 10);
+  users.push({ username, password: hashedPassword });
   res.send("User Registered Successfully");
 });
 
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
   const user = users.find((u) => u.username === username);
-  /* !user: This checks if the user object was not found (e.g., from a database query).
 
-    password !== user.password: This checks if the provided password does not match the stored password. */
-  if (!user || password !== user.password) {
-    return res.send("Invalid credentials");
+  if (!user || !(await bcrypt.compare(password, user.password))) {
+    return res.send("Not Authorized");
   }
-  req.session.user = user;
-  res.send("User Logged In Successfully");
+  const token = jwt.sign({ username }, "test#secret");
+  res.json({ token });
 });
 
 app.get("/dashboard", (req, res) => {
-  if (!req.session.user) {
-    return res.send("Unauthorized access");
+  try {
+    const token = req.header("Authorization");
+    const decodedToken = jwt.verify(token, "test#secret");
+    if (decodedToken.username) {
+      return res.send("Welcome to the dashboard, " + decodedToken.username);
+    } else {
+      return res.send("Not Authorized");
+    }
+  } catch (error) {
+    res.send("Access denied. Invalid token.");
   }
-  res.send(`Welcome to your dashboard, ${req.session.user.username}`);
 });
 
 app.listen(PORT, () => {
