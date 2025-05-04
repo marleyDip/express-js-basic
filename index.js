@@ -1,6 +1,4 @@
 import express from "express";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 
 export const app = express();
 const PORT = 3000;
@@ -11,39 +9,36 @@ app.get("/", (req, res) => {
   res.send("hello, express");
 });
 
-const users = [];
-
-// jwt secret key
-app.post("/register", async (req, res) => {
-  const { username, password } = req.body;
-  const hashedPassword = await bcrypt.hash(password, 10);
-  users.push({ username, password: hashedPassword });
-  res.send("User Registered Successfully");
+// Get All Products
+app.get("/api/products", (req, res) => {
+  const products = [
+    { id: 1, name: "Product 1", price: 100 },
+    { id: 2, name: "Product 2", price: 200 },
+    { id: 3, name: "Product 3", price: 300 },
+  ];
+  res.status(200).json({ products });
 });
 
-app.post("/login", async (req, res) => {
-  const { username, password } = req.body;
-  const user = users.find((u) => u.username === username);
+// Get a Single Product
+app.get("/api/products/:id", (req, res) => {
+  const products = [
+    { id: 1, name: "Product 1", price: 100 },
+    { id: 2, name: "Product 2", price: 200 },
+    { id: 3, name: "Product 3", price: 300 },
+  ];
+  const product = products.find((p) => p.id === Number(req.params.id));
 
-  if (!user || !(await bcrypt.compare(password, user.password))) {
-    return res.send("Not Authorized");
+  if (!product) {
+    return res.status(404).json({ message: "Product not found" });
   }
-  const token = jwt.sign({ username }, "test#secret");
-  res.json({ token });
+  res.status(200).json({ product });
 });
 
-app.get("/dashboard", (req, res) => {
-  try {
-    const token = req.header("Authorization");
-    const decodedToken = jwt.verify(token, "test#secret");
-    if (decodedToken.username) {
-      return res.send("Welcome to the dashboard, " + decodedToken.username);
-    } else {
-      return res.send("Not Authorized");
-    }
-  } catch (error) {
-    res.send("Access denied. Invalid token.");
-  }
+// Create a New Product
+app.post("/api/products", (req, res) => {
+  const newProduct = req.body;
+  newProduct.id = Date.now();
+  res.status(201).json(newProduct);
 });
 
 app.listen(PORT, () => {
